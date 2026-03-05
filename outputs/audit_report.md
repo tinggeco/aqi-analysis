@@ -1,82 +1,83 @@
-# Audit Report --- Issues Found + Corrections Made
+# 空間資料審計報告（Audit Report）
 
-## 1. Dataset Overview
+## Issues Found + Corrections Made
 
-Dataset: Evacuation Shelters (data.gov.tw)\
-Purpose: Spatial analysis with AQI stations to evaluate shelter
-suitability during poor air quality scenarios.
+## 1. 資料集概述（Dataset Overview）
 
-The dataset was inspected for coordinate validity, spatial consistency,
-and missing attributes required for analysis.
+資料集：政府開放資料平台「避難收容處所」資料（data.gov.tw）\
+目的：與 AQI
+空氣品質測站進行空間分析，以評估在空氣品質不佳情境下各避難收容處所的適宜性。
 
-------------------------------------------------------------------------
-
-## 2. Issues Identified
-
-### 2.1 Incorrect Coordinates
-
-Several shelter points were located in unrealistic locations,
-including: - Points appearing in the ocean - Points located outside
-Taiwan (some within mainland China)
-
-This indicates potential coordinate errors or data entry issues in the
-original dataset.
-
-### 2.2 Missing Facility Type Attribute
-
-The dataset did not contain an attribute indicating whether shelters are
-**indoor** or **outdoor**, which is important for evaluating exposure to
-poor air quality.
+本資料集在分析前進行了基本的空間與屬性審計，包括座標有效性檢查、空間位置合理性檢查，以及分析所需屬性的補充。
 
 ------------------------------------------------------------------------
 
-## 3. Corrections Applied
+## 2. 發現的問題（Issues Identified）
 
-### 3.1 Spatial Validation Using Administrative Boundaries
+### 2.1 座標錯誤問題
 
-To remove incorrect points, a spatial validation process was applied:
+在檢查避難收容處所點位資料時，發現部分點位存在明顯的空間錯誤，例如：
 
-1.  An open-source Taiwan administrative boundary **SHP file** was
-    obtained.
-2.  Shelter point data was spatially intersected with the Taiwan
-    administrative polygons.
-3.  Only points that intersect with Taiwan administrative boundaries
-    were retained.
+-   有些點位出現在海上\
+-   有些點位落在台灣範圍之外，甚至位於中國境內
 
-This step removed shelters located outside Taiwan or in the ocean.
+這顯示原始資料中可能存在座標填寫錯誤或座標系統混淆的情況。
 
-### 3.2 Indoor / Outdoor Inference
+### 2.2 缺乏設施型態屬性
 
-Because the dataset lacked indoor/outdoor attributes, a semantic
-inference approach was used based on facility names.
+原始資料並未提供「室內 /
+室外」設施的欄位。然而，在空氣品質分析中，這個屬性非常重要，因為室內空間通常能降低污染暴露風險。
 
-Keyword rules used:
-
-Indoor (True) - 圖書館 - 體育館 - 禮堂 - 活動中心 - 學校
-
-Outdoor (False) - 公園 - 廣場
-
-If the facility type could not be clearly identified, the shelter was
-conservatively classified as **indoor**.
+因此，需要透過其他方式推論此資訊。
 
 ------------------------------------------------------------------------
 
-## 4. Data Quality Outcome
+## 3. 修正與處理方式（Corrections Applied）
 
-After spatial validation and attribute inference:
+### 3.1 使用行政區界線進行空間驗證
 
--   Invalid coordinates were removed.
--   All shelters fall within Taiwan administrative boundaries.
--   An **is_indoor** attribute was added for scenario analysis.
+為了排除錯誤的點位，本研究使用台灣行政區界線資料進行空間驗證。
 
-These corrections ensure the dataset can be reliably used for the
-spatial overlay and AQI risk analysis tasks.
+處理流程如下：
+
+1.  下載開源的 **台灣縣市行政區界線 SHP 檔**\
+2.  將避難收容處所點位資料與行政區多邊形進行 **Spatial
+    Intersection（空間相交）**\
+3.  只保留與台灣行政區範圍有相交的點位
+
+透過此方法，可以有效移除位於海上或台灣境外的錯誤資料。
+
+### 3.2 室內 / 室外屬性推論
+
+由於資料缺乏室內或室外的欄位，本研究透過設施名稱進行語意推論（semantic
+inference）。
+
+關鍵字規則如下：
+
+**室內設施（is_indoor = True）** - 圖書館 - 體育館 - 禮堂 - 活動中心 -
+學校
+
+**室外設施（is_indoor = False）** - 公園 - 廣場
+
+若設施名稱無法明確判斷，則採取保守策略，將其暫時分類為 **室內設施**。
 
 ------------------------------------------------------------------------
 
-## 5. Notes
+## 4. 資料品質結果（Data Quality Outcome）
 
-While AI tools were initially tested for automated coordinate
-validation, they were not fully reliable in detecting geographic errors
-such as ocean locations. Therefore, spatial intersection with
-authoritative boundary data was used as the primary validation method.
+經過空間驗證與屬性推論後：
+
+-   錯誤座標（海上或台灣境外）已被移除\
+-   所有避難收容處所點位皆位於台灣行政區範圍內\
+-   新增 **is_indoor** 欄位，以支援後續情境模擬與風險分析
+
+這些處理步驟使資料能夠可靠地用於後續的空間疊圖分析與 AQI 風險評估。
+
+------------------------------------------------------------------------
+
+## 5. 補充說明（Notes）
+
+在資料清理過程中，曾嘗試使用 AI 協助自動檢查座標錯誤。然而，AI
+在判斷點位是否落在海上或是否位於台灣境內時，並不總是可靠。因此，本研究最終採用
+**與權威行政區邊界資料進行空間相交**
+的方法，作為主要的資料驗證與清理策略。
